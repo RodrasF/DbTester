@@ -16,9 +16,6 @@ public class TestUser : BaseEntity
 
     // Role assignment (if applicable)
     public string? AssignedRole { get; set; }
-
-    // For temporary test users - if true, user will be created before test and dropped after
-    public bool IsTemporary { get; set; }
 }
 
 public class UserPermission

@@ -25,14 +25,4 @@ public class TestUserRepository : EfGenericRepository<TestUser>, ITestUserReposi
 
         return success;
     }
-
-    public async Task<bool> CreateTemporaryUserAsync(TestUser user, DatabaseConnection connection)
-    {
-        return await _databaseService.CreateUserAsync(connection, user);
-    }
-
-    public async Task<bool> DropTemporaryUserAsync(TestUser user, DatabaseConnection connection)
-    {
-        return await _databaseService.DropUserAsync(connection, user.Username);
-    }
 }

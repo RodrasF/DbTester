@@ -22,10 +22,6 @@ public interface IDatabaseService
         DatabasePermission permission,
         string? objectName = null);
 
-    // User management in database
-    Task<bool> CreateUserAsync(DatabaseConnection connection, TestUser user);
-    Task<bool> DropUserAsync(DatabaseConnection connection, string username);
-
     // Returns the connection string for a given connection
     string GetConnectionString(DatabaseConnection connection, string? username = null, string? password = null);
 }

@@ -73,13 +73,11 @@ public class UsersController : ControllerBase
                 Message = "Name, username, and password are required"
             });
         }
-
         var user = new TestUser
         {
             Name = request.Name,
             Username = request.Username,
             EncryptedPassword = _encryptionService.Encrypt(request.Password),
-            IsTemporary = request.IsTemporary,
             AssignedRole = request.AssignedRole,
             ExpectedPermissions = request.ExpectedPermissions.Select(p => new UserPermission
             {
@@ -123,7 +121,6 @@ public class UsersController : ControllerBase
                 Message = "User not found"
             });
         }
-
         existingUser.Name = request.Name;
         existingUser.Username = request.Username;
 
@@ -133,7 +130,6 @@ public class UsersController : ControllerBase
             existingUser.EncryptedPassword = _encryptionService.Encrypt(request.Password);
         }
 
-        existingUser.IsTemporary = request.IsTemporary;
         existingUser.AssignedRole = request.AssignedRole;
 
         // Update permissions
@@ -179,7 +175,6 @@ public class UsersController : ControllerBase
             Message = "User deleted successfully"
         });
     }
-
     [HttpPost("verify")]
     public async Task<ActionResult<VerifyUserExistsResponse>> VerifyUserExists(VerifyUserExistsRequest request)
     {
@@ -214,95 +209,6 @@ public class UsersController : ControllerBase
             Exists = exists
         });
     }
-
-    [HttpPost("{id:guid}/create-in-db/{connectionId:guid}")]
-    public async Task<ActionResult<TestUserResponse>> CreateUserInDatabase(Guid id, Guid connectionId)
-    {
-        var user = await _userRepository.GetByIdAsync(id);
-
-        if (user == null)
-        {
-            return NotFound(new TestUserResponse
-            {
-                Success = false,
-                Message = "User not found"
-            });
-        }
-
-        var connection = await _connectionRepository.GetByIdAsync(connectionId);
-
-        if (connection == null)
-        {
-            return NotFound(new TestUserResponse
-            {
-                Success = false,
-                Message = "Connection not found"
-            });
-        }
-
-        var success = await _userRepository.CreateTemporaryUserAsync(user, connection);
-
-        if (!success)
-        {
-            return BadRequest(new TestUserResponse
-            {
-                Success = false,
-                Message = "Failed to create user in database"
-            });
-        }
-
-        return Ok(new TestUserResponse
-        {
-            Success = true,
-            Message = "User created in database successfully",
-            User = MapToDto(user)
-        });
-    }
-
-    [HttpPost("{id:guid}/drop-from-db/{connectionId:guid}")]
-    public async Task<ActionResult<TestUserResponse>> DropUserFromDatabase(Guid id, Guid connectionId)
-    {
-        var user = await _userRepository.GetByIdAsync(id);
-
-        if (user == null)
-        {
-            return NotFound(new TestUserResponse
-            {
-                Success = false,
-                Message = "User not found"
-            });
-        }
-
-        var connection = await _connectionRepository.GetByIdAsync(connectionId);
-
-        if (connection == null)
-        {
-            return NotFound(new TestUserResponse
-            {
-                Success = false,
-                Message = "Connection not found"
-            });
-        }
-
-        var success = await _userRepository.DropTemporaryUserAsync(user, connection);
-
-        if (!success)
-        {
-            return BadRequest(new TestUserResponse
-            {
-                Success = false,
-                Message = "Failed to drop user from database"
-            });
-        }
-
-        return Ok(new TestUserResponse
-        {
-            Success = true,
-            Message = "User dropped from database successfully",
-            User = MapToDto(user)
-        });
-    }
-
     private static TestUserDto MapToDto(TestUser user)
     {
         return new TestUserDto
@@ -310,7 +216,6 @@ public class UsersController : ControllerBase
             Id = user.Id,
             Name = user.Name,
             Username = user.Username,
-            IsTemporary = user.IsTemporary,
             AssignedRole = user.AssignedRole,
             ExpectedPermissions = user.ExpectedPermissions.Select(p => new UserPermissionDto
             {

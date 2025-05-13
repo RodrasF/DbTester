@@ -8,7 +8,6 @@ public class TestUserDto
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
-    public bool IsTemporary { get; set; }
     public string? AssignedRole { get; set; }
     public List<UserPermissionDto> ExpectedPermissions { get; set; } = new List<UserPermissionDto>();
     public DateTime CreatedAt { get; set; }
@@ -27,7 +26,6 @@ public class CreateTestUserRequest
     public string Name { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
-    public bool IsTemporary { get; set; }
     public string? AssignedRole { get; set; }
     public List<UserPermissionDto> ExpectedPermissions { get; set; } = new List<UserPermissionDto>();
 }
@@ -38,7 +36,6 @@ public class UpdateTestUserRequest
     public string Name { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty; // Leave empty to keep existing password
-    public bool IsTemporary { get; set; }
     public string? AssignedRole { get; set; }
     public List<UserPermissionDto> ExpectedPermissions { get; set; } = new List<UserPermissionDto>();
 }
