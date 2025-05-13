@@ -16,7 +16,7 @@ import {
   type TestOperation,
 } from "@/services/workflowTypes";
 import { WorkflowDialog } from "./WorkflowDialog";
-import { useToaster } from "@/hooks/useToaster";
+import { toast } from "sonner";
 
 export function WorkflowsPage() {
   const [workflows, setWorkflows] = useState<TestWorkflow[]>([]);
@@ -27,7 +27,6 @@ export function WorkflowsPage() {
     TestWorkflow | undefined
   >(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { showToast } = useToaster();
 
   // Fetch workflows when component mounts
   useEffect(() => {
@@ -66,25 +65,19 @@ export function WorkflowsPage() {
       const response = await workflowService.deleteWorkflow(id);
       if (response.success) {
         setWorkflows((prev) => prev.filter((workflow) => workflow.id !== id));
-        showToast({
-          title: "Workflow Deleted",
+        toast("Workflow Deleted", {
           description: "The workflow has been successfully deleted",
-          variant: "default",
           duration: 3000,
         });
       } else {
-        showToast({
-          title: "Error",
+        toast.error("Error", {
           description: response.message || "Failed to delete workflow",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (err) {
-      showToast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to delete workflow. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
       console.error("Error deleting workflow:", err);
@@ -94,11 +87,9 @@ export function WorkflowsPage() {
   const handleRunWorkflow = async (workflow: TestWorkflow) => {
     // Check if connection and user are specified for templates
     if (workflow.isTemplate && (!workflow.connectionId || !workflow.userId)) {
-      showToast({
-        title: "Configuration Required",
+      toast("Configuration Required", {
         description:
           "This template workflow needs a connection and user before running",
-        variant: "destructive",
         duration: 5000,
       });
       return;
@@ -113,28 +104,22 @@ export function WorkflowsPage() {
       );
 
       if (response.success && response.testRun) {
-        showToast({
-          title: "Workflow Executed",
+        toast("Workflow Executed", {
           description: response.message || "Workflow executed successfully",
-          variant: "success",
           duration: 3000,
         });
 
         // Navigate to results page or show results in a modal
         // For now, we'll just show a toast
       } else {
-        showToast({
-          title: "Execution Failed",
+        toast.error("Execution Failed", {
           description: response.message || "Failed to execute workflow",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (err) {
-      showToast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to execute workflow. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
       console.error("Error executing workflow:", err);
@@ -171,41 +156,33 @@ export function WorkflowsPage() {
           setWorkflows((prev) =>
             prev.map((w) => (w.id === workflowData.id ? response.workflow! : w))
           );
-          showToast({
-            title: "Workflow Updated",
+          toast.success("Workflow Updated", {
             description:
               response.message ||
               `Workflow "${workflowData.name}" was updated successfully`,
-            variant: "success",
             duration: 3000,
           });
         } else {
           // Add to local state
           setWorkflows((prev) => [...prev, response.workflow!]);
-          showToast({
-            title: "Workflow Created",
+          toast.success("Workflow Created", {
             description:
               response.message ||
               `Workflow "${workflowData.name}" was created successfully`,
-            variant: "success",
             duration: 3000,
           });
         }
 
         setIsDialogOpen(false);
       } else {
-        showToast({
-          title: "Error",
+        toast.error("Error", {
           description: response.message || "Failed to save workflow",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (err) {
-      showToast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to save workflow. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
       console.error("Error saving workflow:", err);

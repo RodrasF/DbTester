@@ -15,8 +15,8 @@ import {
   DatabasePermissions,
 } from "@/services/userTypes";
 import { Badge } from "@/components/ui/badge";
-import { useToaster } from "@/hooks/useToaster";
 import { UserDialog } from "./UserDialog";
+import { toast } from "sonner";
 
 export function UsersPage() {
   const [users, setUsers] = useState<TestUser[]>([]);
@@ -27,7 +27,6 @@ export function UsersPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { showToast } = useToaster();
 
   // Fetch users when component mounts
   useEffect(() => {
@@ -74,25 +73,19 @@ export function UsersPage() {
       const response = await userService.deleteUser(id);
       if (response.success) {
         setUsers((prev) => prev.filter((user) => user.id !== id));
-        showToast({
-          title: "User Deleted",
+        toast.success("User Deleted", {
           description: "Test user was deleted successfully",
-          variant: "default",
           duration: 3000,
         });
       } else {
-        showToast({
-          title: "Error",
+        toast.error("Error", {
           description: response.message || "Failed to delete user",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (err) {
-      showToast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to delete user. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
       console.error("Error deleting user:", err);
@@ -116,26 +109,20 @@ export function UsersPage() {
       );
 
       if (response.isValid) {
-        showToast({
-          title: "Validation Successful",
+        toast.success("Validation Successful", {
           description: response.message || "User has all required permissions",
-          variant: "success",
           duration: 3000,
         });
       } else {
-        showToast({
-          title: "Validation Failed",
+        toast.error("Validation Failed", {
           description:
             response.message || "User is missing required permissions",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (err) {
-      showToast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to validate user. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
       console.error("Error validating user:", err);
@@ -162,41 +149,33 @@ export function UsersPage() {
           setUsers((prev) =>
             prev.map((u) => (u.id === userData.id ? response.user! : u))
           );
-          showToast({
-            title: "User Updated",
+          toast.success("User Updated", {
             description:
               response.message ||
               `User "${userData.username}" was updated successfully`,
-            variant: "success",
             duration: 3000,
           });
         } else {
           // Add to local state
           setUsers((prev) => [...prev, response.user!]);
-          showToast({
-            title: "User Added",
+          toast.success("User Added", {
             description:
               response.message ||
               `User "${userData.username}" was added successfully`,
-            variant: "success",
             duration: 3000,
           });
         }
 
         setIsDialogOpen(false);
       } else {
-        showToast({
-          title: "Error",
+        toast.error("Error", {
           description: response.message || "Failed to save user",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (err) {
-      showToast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to save user. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
       console.error("Error saving user:", err);

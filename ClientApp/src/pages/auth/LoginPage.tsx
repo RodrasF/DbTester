@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useToaster } from "@/hooks/useToaster";
+import { toast } from "sonner";
 
 export function LoginPage() {
   const [username, setUsername] = useState("");
@@ -25,20 +25,17 @@ export function LoginPage() {
   const { login, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { showToast } = useToaster();
 
   // Check for token expired query parameter
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     if (queryParams.get("expired") === "true") {
-      showToast({
-        title: "Session expired",
+      toast("Session expired", {
         description: "Your session has expired. Please log in again.",
-        variant: "destructive",
         duration: 5000,
       });
     }
-  }, [location, showToast]);
+  }, [location]);
 
   // Redirect if already authenticated
   if (isAuthenticated) {

@@ -1,13 +1,12 @@
 import { AuthContext, type AuthContextType } from "@/context/AuthContext";
-import { useToaster } from "@/hooks/useToaster";
 import { authService } from "@/services/authService";
 import type { User } from "@/services/authTypes";
 import { useEffect, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(authService.getStoredUser());
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { showToast } = useToaster();
 
   useEffect(() => {
     // Initialize authentication on component mount
@@ -49,27 +48,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.success && response.user) {
         setUser(response.user);
-        showToast({
-          title: "Login successful",
+        toast.success("Login successful", {
           description: `Welcome back, ${response.user.username}!`,
-          variant: "success",
           duration: 3000,
         });
         return true;
       } else {
-        showToast({
-          title: "Login failed",
+        toast.error("Login failed", {
           description: response.message || "Invalid username or password",
-          variant: "destructive",
           duration: 5000,
         });
         return false;
       }
     } catch (error) {
-      showToast({
-        title: "Login error",
+      toast.error("Login error", {
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
         duration: 5000,
       });
       return false;
@@ -98,27 +91,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.success && response.user) {
         setUser(response.user);
-        showToast({
-          title: "Registration successful",
+        toast.success("Registration successful", {
           description: `Welcome, ${response.user.username}!`,
-          variant: "success",
           duration: 3000,
         });
         return true;
       } else {
-        showToast({
-          title: "Registration failed",
+        toast.error("Registration failed", {
           description: response.message || "Unable to register account",
-          variant: "destructive",
           duration: 5000,
         });
         return false;
       }
     } catch (error) {
-      showToast({
-        title: "Registration error",
+      toast.error("Registration error", {
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
         duration: 5000,
       });
       return false;
@@ -130,10 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     authService.logout();
     setUser(null);
-    showToast({
-      title: "Logged out",
+    toast("Logged out", {
       description: "You have been successfully logged out",
-      variant: "default",
       duration: 3000,
     });
   };

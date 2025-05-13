@@ -13,7 +13,7 @@ import {
   connectionService,
   type DatabaseConnection,
 } from "@/services/connectionService";
-import { useToaster } from "@/hooks/useToaster";
+import { toast } from "sonner";
 
 export function ConnectionsPage() {
   const [connections, setConnections] = useState<DatabaseConnection[]>([]);
@@ -24,7 +24,7 @@ export function ConnectionsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { showToast } = useToaster();
+
   // Fetch connections when component mounts
   useEffect(() => {
     fetchConnections();
@@ -69,30 +69,25 @@ export function ConnectionsPage() {
       const response = await connectionService.deleteConnection(id);
       if (response.success) {
         setConnections((prev) => prev.filter((conn) => conn.id !== id));
-        showToast({
-          title: "Connection Deleted",
+        toast.success("Connection Deleted", {
           description: response.message || "Connection successfully deleted",
-          variant: "default",
           duration: 3000,
         });
       } else {
-        showToast({
-          title: "Error",
+        toast.error("Error", {
           description: response.message || "Failed to delete connection",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (err) {
-      showToast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to delete connection. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
       console.error("Error deleting connection:", err);
     }
   };
+
   const handleTestConnection = async (id: string) => {
     try {
       const response = await connectionService.testConnection({ id });
@@ -110,26 +105,20 @@ export function ConnectionsPage() {
       );
 
       if (response.isConnectionValid) {
-        showToast({
-          title: "Connection Test Successful",
+        toast.success("Connection Test Successful", {
           description:
             response.message || "Database connection verified successfully",
-          variant: "success",
           duration: 3000,
         });
       } else {
-        showToast({
-          title: "Connection Test Failed",
+        toast.error("Connection Test Failed", {
           description: response.message || "Could not connect to database",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (err) {
-      showToast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to test connection. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
       console.error("Error testing connection:", err);
@@ -160,41 +149,33 @@ export function ConnectionsPage() {
               conn.id === formData.id ? response.connection! : conn
             )
           );
-          showToast({
-            title: "Connection Updated",
+          toast.success("Connection Updated", {
             description:
               response.message ||
               `Connection "${formData.name}" was updated successfully`,
-            variant: "success",
             duration: 3000,
           });
         } else {
           // Add to local state
           setConnections((prev) => [...prev, response.connection!]);
-          showToast({
-            title: "Connection Added",
+          toast.success("Connection Added", {
             description:
               response.message ||
               `Connection "${formData.name}" was added successfully`,
-            variant: "success",
             duration: 3000,
           });
         }
 
         setIsDialogOpen(false);
       } else {
-        showToast({
-          title: "Error",
+        toast("Error", {
           description: response.message || "Failed to save connection",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (err) {
-      showToast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to save connection. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
       console.error("Error saving connection:", err);

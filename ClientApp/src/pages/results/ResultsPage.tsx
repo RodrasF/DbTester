@@ -5,14 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { workflowService } from "@/services/workflowService";
 import { type TestRun } from "@/services/workflowTypes";
-import { useToaster } from "@/hooks/useToaster";
+import { toast } from "sonner";
 
 export function ResultsPage() {
   const [testRuns, setTestRuns] = useState<TestRun[]>([]);
   const [selectedRun, setSelectedRun] = useState<TestRun | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { showToast } = useToaster();
 
   // Fetch test runs when component mounts
   useEffect(() => {
@@ -46,18 +45,14 @@ export function ResultsPage() {
       if (response.success && response.testRun) {
         setSelectedRun(response.testRun);
       } else {
-        showToast({
-          title: "Error",
+        toast.error("Error", {
           description: response.message || "Failed to load test run details",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (err) {
-      showToast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to load test run details. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
       console.error("Error loading test run details:", err);
