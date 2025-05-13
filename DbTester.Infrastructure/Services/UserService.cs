@@ -1,4 +1,8 @@
 using DbTester.Application.Authentication;
+using DbTester.Application.Interfaces;
+using DbTester.Domain.Entities;
+using DbTester.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -6,109 +10,98 @@ namespace DbTester.Infrastructure.Services;
 
 public class UserService : IUserService
 {
-    private readonly Dictionary<string, User> _users = new();
-    private readonly Dictionary<string, string> _passwordHashes = new();
-    private readonly Dictionary<string, string> _userIdByUsername = new();
+    private readonly ApplicationDbContext _dbContext;
 
-    public UserService()
+    public UserService(ApplicationDbContext dbContext)
     {
-        // Add a default admin account for development
-        var adminId = Guid.NewGuid().ToString();
-        var admin = new User
-        {
-            Id = adminId,
-            Username = "admin",
-            Email = "admin@example.com",
-            Role = "Admin"
-        };
-
-        _users.Add(adminId, admin);
-        _userIdByUsername.Add("admin", adminId);
-        _passwordHashes.Add(adminId, HashPassword("admin123"));
-    }
-
-    public async Task<User?> ValidateUserCredentials(string username, string password)
-    {
-        // Simulate async operation
-        await Task.CompletedTask;
-
-        if (!_userIdByUsername.TryGetValue(username, out var userId))
-            return null;
-
-        if (!_passwordHashes.TryGetValue(userId, out var storedHash))
-            return null;
-
-        if (VerifyPassword(password, storedHash))
-            return _users[userId];
-
-        return null;
+        _dbContext = dbContext;
     }
 
     public async Task<User?> GetUserByUsername(string username)
     {
-        // Simulate async operation
-        await Task.CompletedTask;
+        var user = await _dbContext.Set<ApplicationUser>()
+            .FirstOrDefaultAsync(u => u.Username == username);
 
-        if (!_userIdByUsername.TryGetValue(username, out var userId))
+        if (user == null)
             return null;
 
-        return _users.TryGetValue(userId, out var user) ? user : null;
+        return new User
+        {
+            Id = user.Id.ToString(),
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role
+        };
     }
 
     public async Task<User?> GetUserById(string id)
     {
-        // Simulate async operation
-        await Task.CompletedTask;
+        if (!Guid.TryParse(id, out var userId))
+            return null;
 
-        return _users.TryGetValue(id, out var user) ? user : null;
+        var user = await _dbContext.Set<ApplicationUser>()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+            return null;
+
+        return new User
+        {
+            Id = user.Id.ToString(),
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role
+        };
+    }
+
+    public async Task<User?> ValidateUserCredentials(string username, string password)
+    {
+        var user = await _dbContext.Set<ApplicationUser>()
+            .FirstOrDefaultAsync(u => u.Username == username);
+
+        if (user == null)
+            return null;
+
+        // Verify the password hash
+        if (!VerifyPasswordHash(password, user.PasswordHash))
+            return null;
+
+        return new User
+        {
+            Id = user.Id.ToString(),
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role
+        };
     }
 
     public async Task<User> CreateUser(User user, string password)
     {
-        // Simulate async operation
-        await Task.CompletedTask;
+        var applicationUser = new ApplicationUser
+        {
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role,
+            PasswordHash = CreatePasswordHash(password)
+        };
 
-        var id = Guid.NewGuid().ToString();
-        user.Id = id;
+        await _dbContext.Set<ApplicationUser>().AddAsync(applicationUser);
+        await _dbContext.SaveChangesAsync();
 
-        _users[id] = user;
-        _userIdByUsername[user.Username] = id;
-        _passwordHashes[id] = HashPassword(password);
-
+        user.Id = applicationUser.Id.ToString();
         return user;
     }
 
-    private string HashPassword(string password)
+    private static string CreatePasswordHash(string password)
     {
         using var sha256 = SHA256.Create();
-        var salt = GenerateSalt();
-        var passwordWithSalt = password + salt;
-        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(passwordWithSalt));
-
-        return Convert.ToBase64String(hashedBytes) + ":" + salt;
+        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+        return Convert.ToBase64String(hashedBytes);
     }
 
-    private bool VerifyPassword(string password, string storedHash)
+    private static bool VerifyPasswordHash(string password, string storedHash)
     {
-        var hashParts = storedHash.Split(':');
-        if (hashParts.Length != 2)
-            return false;
-
-        var salt = hashParts[1];
-        var passwordWithSalt = password + salt;
-
-        using var sha256 = SHA256.Create();
-        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(passwordWithSalt));
-        var computedHash = Convert.ToBase64String(hashedBytes);
-
-        return computedHash == hashParts[0];
-    }
-
-    private string GenerateSalt()
-    {
-        var saltBytes = new byte[16];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(saltBytes);
-        return Convert.ToBase64String(saltBytes);
+        var hashedPassword = CreatePasswordHash(password);
+        return hashedPassword == storedHash;
     }
 }

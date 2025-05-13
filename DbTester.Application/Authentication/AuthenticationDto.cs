@@ -1,5 +1,4 @@
 using DbTester.Application.Common;
-using System.Collections.Generic;
 
 namespace DbTester.Application.Authentication;
 
@@ -49,12 +48,4 @@ public class User
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
-}
-
-public interface IUserService
-{
-    Task<User?> ValidateUserCredentials(string username, string password);
-    Task<User?> GetUserByUsername(string username);
-    Task<User?> GetUserById(string id);
-    Task<User> CreateUser(User user, string password);
 }

@@ -48,10 +48,9 @@ DbTester streamlines database permission testing for database administrators, se
 
 ### User Management
 
-- The user should be able to provide multiple users and their expected permissions
+- The user should be able to configure multiple database users and their expected permissions for a given Test
 - Support for role-based permission testing
 - Allow testing of permission inheritance and role hierarchies
-- Integration with existing database users or creation of temporary test users
 
 ### Supported Database Systems
 

@@ -1,4 +1,5 @@
 using DbTester.Application.Authentication;
+using DbTester.Application.Interfaces;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
