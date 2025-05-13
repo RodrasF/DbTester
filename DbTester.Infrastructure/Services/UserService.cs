@@ -1,10 +1,6 @@
 using DbTester.Application.Authentication;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DbTester.Infrastructure.Services;
 
@@ -23,8 +19,6 @@ public class UserService : IUserService
             Id = adminId,
             Username = "admin",
             Email = "admin@example.com",
-            FirstName = "Admin",
-            LastName = "User",
             Role = "Admin"
         };
 

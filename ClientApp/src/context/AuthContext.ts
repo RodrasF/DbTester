@@ -10,9 +10,7 @@ export interface AuthContextType {
   register: (
     username: string,
     password: string,
-    email: string,
-    firstName: string,
-    lastName: string
+    email: string
   ) => Promise<boolean>;
   hasRole: (role: string) => boolean;
 }

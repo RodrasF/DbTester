@@ -18,8 +18,6 @@ export function RegisterPage() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
-    firstName: "",
-    lastName: "",
     password: "",
     confirmPassword: "",
   });
@@ -58,16 +56,6 @@ export function RegisterPage() {
       isValid = false;
     }
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
-      isValid = false;
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-      isValid = false;
-    }
-
     if (!formData.password) {
       newErrors.password = "Password is required";
       isValid = false;
@@ -93,9 +81,7 @@ export function RegisterPage() {
     const success = await register(
       formData.username,
       formData.password,
-      formData.email,
-      formData.firstName,
-      formData.lastName
+      formData.email
     );
 
     if (success) {
@@ -148,40 +134,6 @@ export function RegisterPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First name</Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  placeholder="First name"
-                  disabled={isLoading}
-                />
-                {errors.firstName && (
-                  <p className="text-sm text-red-500">{errors.firstName}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last name</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  placeholder="Last name"
-                  disabled={isLoading}
-                />
-                {errors.lastName && (
-                  <p className="text-sm text-red-500">{errors.lastName}</p>
-                )}
-              </div>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -215,7 +167,7 @@ export function RegisterPage() {
             </div>
           </CardContent>
 
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 pt-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>

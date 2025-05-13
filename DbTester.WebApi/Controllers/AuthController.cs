@@ -69,8 +69,6 @@ public class AuthController : ControllerBase
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
                 Role = user.Role
             }
         });
@@ -104,8 +102,6 @@ public class AuthController : ControllerBase
         {
             Username = request.Username,
             Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
             Role = "User" // Default role
         }, request.Password);
 
@@ -121,8 +117,6 @@ public class AuthController : ControllerBase
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
                 Role = user.Role
             }
         });
@@ -161,8 +155,6 @@ public class AuthController : ControllerBase
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
                 Role = user.Role
             }
         });

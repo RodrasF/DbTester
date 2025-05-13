@@ -1,30 +1,20 @@
+using DbTester.Application.Authentication;
+using DbTester.Application.ConnectionManagement;
 using DbTester.Application.Interfaces;
 using DbTester.Infrastructure.Data;
 using DbTester.Infrastructure.Security;
 using DbTester.Infrastructure.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using FluentValidation;
-using DbTester.Application.ConnectionManagement;
-using DbTester.Application.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
-
 builder.Services.AddOpenApi();
 
-// Add CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("CorsPolicy",
-        builder => builder
-            .AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader());
-});
+builder.Services.AddControllers();
 
 // Register DbConnectionFactory
 builder.Services.AddSingleton<DbConnectionFactory>();
@@ -56,6 +46,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Add authorization policies
 builder.Services.AddAuthorization();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy",
+        builder => builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 
 var app = builder.Build();
 

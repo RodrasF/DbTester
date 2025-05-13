@@ -1,9 +1,9 @@
-using System.Data;
 using Dapper;
 using DbTester.Application.Interfaces;
 using DbTester.Domain.Entities;
 using DbTester.Domain.Enums;
 using Npgsql;
+using System.Data;
 
 namespace DbTester.Infrastructure.Services;
 

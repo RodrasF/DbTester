@@ -70,23 +70,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   };
-
   const register = async (
     username: string,
     password: string,
-    email: string,
-    firstName: string,
-    lastName: string
+    email: string
   ): Promise<boolean> => {
     setIsLoading(true);
-
     try {
       const response = await authService.register({
         username,
         password,
         email,
-        firstName,
-        lastName,
       });
 
       if (response.success && response.user) {
