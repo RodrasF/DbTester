@@ -75,6 +75,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// Initialize the database
+await app.InitializeDatabaseAsync();
+
 app.UseHttpsRedirection();
 
 // Use CORS before authorization
@@ -83,8 +86,5 @@ app.UseCors("CorsPolicy");
 app.UseAuthorization();
 
 app.MapControllers();
-
-// Initialize the database
-await app.InitializeDatabaseAsync();
 
 app.Run();
