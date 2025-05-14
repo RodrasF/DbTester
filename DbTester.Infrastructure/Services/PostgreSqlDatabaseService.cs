@@ -23,7 +23,7 @@ public class PostgreSqlDatabaseService : IDatabaseService
             Host = connection.Server,
             Port = connection.Port,
             Database = connection.DatabaseName,
-            Username = username ?? _encryptionService.Decrypt(connection.EncryptedUsername),
+            Username = username ?? connection.Username,
             Password = password ?? _encryptionService.Decrypt(connection.EncryptedPassword),
             MaxPoolSize = connection.MaxPoolSize,
             MinPoolSize = connection.MinPoolSize,
@@ -97,9 +97,7 @@ public class PostgreSqlDatabaseService : IDatabaseService
         DatabasePermission permission,
         string? objectName = null)
     {
-        var decryptedPassword = _encryptionService.Decrypt(user.EncryptedPassword);
         string sql;
-
         try
         {
             switch (permission)
@@ -229,6 +227,7 @@ public class PostgreSqlDatabaseService : IDatabaseService
                     return (false, $"Unsupported permission type: {permission}");
             }
 
+            var decryptedPassword = _encryptionService.Decrypt(user.EncryptedPassword);
             var result = await ExecuteSqlAsync(connection, sql, null, user.Username, decryptedPassword);
             return (result.Success, result.ErrorMessage);
         }

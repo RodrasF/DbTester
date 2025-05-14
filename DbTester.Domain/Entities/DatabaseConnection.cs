@@ -9,8 +9,8 @@ public class DatabaseConnection : BaseEntity
     public int Port { get; set; }
     public string DatabaseName { get; set; } = string.Empty;
 
-    // Username and password are stored encrypted
-    public string EncryptedUsername { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    // Password is stored encrypted
     public string EncryptedPassword { get; set; } = string.Empty;
 
     // Connection pooling settings

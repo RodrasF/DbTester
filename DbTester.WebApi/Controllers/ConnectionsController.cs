@@ -92,7 +92,7 @@ public class ConnectionsController : ControllerBase
             Server = request.Server,
             Port = request.Port,
             DatabaseName = request.DatabaseName,
-            EncryptedUsername = _encryptionService.Encrypt(request.Username),
+            Username = request.Username,
             EncryptedPassword = _encryptionService.Encrypt(request.Password),
             MaxPoolSize = request.MaxPoolSize,
             MinPoolSize = request.MinPoolSize,
@@ -163,7 +163,7 @@ public class ConnectionsController : ControllerBase
         existingConnection.Server = request.Server;
         existingConnection.Port = request.Port;
         existingConnection.DatabaseName = request.DatabaseName;
-        existingConnection.EncryptedUsername = _encryptionService.Encrypt(request.Username);
+        existingConnection.Username = request.Username;
 
         // Only update password if a new one was provided
         if (!string.IsNullOrWhiteSpace(request.Password))
@@ -269,7 +269,7 @@ public class ConnectionsController : ControllerBase
                 Server = request.Server!,
                 Port = request.Port,
                 DatabaseName = request.DatabaseName!,
-                EncryptedUsername = _encryptionService.Encrypt(request.Username!),
+                Username = request.Username!,
                 EncryptedPassword = _encryptionService.Encrypt(request.Password!)
             };
 
@@ -293,7 +293,7 @@ public class ConnectionsController : ControllerBase
             Server = connection.Server,
             Port = connection.Port,
             DatabaseName = connection.DatabaseName,
-            Username = connection.EncryptedUsername, // Note: This is still encrypted
+            Username = connection.Username,
             Password = "", // Don't return the password
             MaxPoolSize = connection.MaxPoolSize,
             MinPoolSize = connection.MinPoolSize,

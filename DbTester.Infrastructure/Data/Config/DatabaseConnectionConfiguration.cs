@@ -22,7 +22,7 @@ public class DatabaseConnectionConfiguration : IEntityTypeConfiguration<Database
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.Property(c => c.EncryptedUsername)
+        builder.Property(c => c.Username)
             .IsRequired()
             .HasMaxLength(500);
 
