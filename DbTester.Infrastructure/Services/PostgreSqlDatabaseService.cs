@@ -90,7 +90,6 @@ public class PostgreSqlDatabaseService : IDatabaseService
             return (false, ex.Message, null);
         }
     }
-
     public async Task<(bool HasPermission, string? ErrorMessage)> TestPermissionAsync(
         DatabaseConnection connection,
         TestUser user,
@@ -102,15 +101,15 @@ public class PostgreSqlDatabaseService : IDatabaseService
         {
             switch (permission)
             {
-                case DatabasePermission.CreateTable:
+                case DatabasePermission.CREATE:
                     sql = "CREATE TABLE temp_permission_test (id int); DROP TABLE temp_permission_test;";
                     break;
 
-                case DatabasePermission.DropTable:
+                case DatabasePermission.DROP:
                     sql = "CREATE TABLE temp_permission_test (id int); DROP TABLE temp_permission_test;";
                     break;
 
-                case DatabasePermission.SelectTable:
+                case DatabasePermission.SELECT:
                     if (string.IsNullOrEmpty(objectName))
                     {
                         return (false, "Table name is required for SELECT permission test");
@@ -118,7 +117,7 @@ public class PostgreSqlDatabaseService : IDatabaseService
                     sql = $"SELECT * FROM {objectName} LIMIT 1";
                     break;
 
-                case DatabasePermission.InsertTable:
+                case DatabasePermission.INSERT:
                     if (string.IsNullOrEmpty(objectName))
                     {
                         return (false, "Table name is required for INSERT permission test");
@@ -148,7 +147,7 @@ public class PostgreSqlDatabaseService : IDatabaseService
                             END $$;";
                     break;
 
-                case DatabasePermission.UpdateTable:
+                case DatabasePermission.UPDATE:
                     if (string.IsNullOrEmpty(objectName))
                     {
                         return (false, "Table name is required for UPDATE permission test");
@@ -156,7 +155,7 @@ public class PostgreSqlDatabaseService : IDatabaseService
                     sql = $"DO $$ BEGIN EXECUTE 'EXPLAIN UPDATE {objectName} SET dummy = dummy WHERE 1=0'; EXCEPTION WHEN undefined_column THEN NULL; END $$;";
                     break;
 
-                case DatabasePermission.DeleteTable:
+                case DatabasePermission.DELETE:
                     if (string.IsNullOrEmpty(objectName))
                     {
                         return (false, "Table name is required for DELETE permission test");
@@ -164,63 +163,60 @@ public class PostgreSqlDatabaseService : IDatabaseService
                     sql = $"EXPLAIN DELETE FROM {objectName} WHERE 1=0";
                     break;
 
-                case DatabasePermission.ExecuteStoredProcedure:
+                case DatabasePermission.EXECUTE:
                     if (string.IsNullOrEmpty(objectName))
                     {
-                        return (false, "Procedure name is required for EXECUTE permission test");
+                        return (false, "Procedure/Function name is required for EXECUTE permission test");
                     }
-                    // Just check if the function exists and is executable by the user
+                    // Check if the function exists and is executable by the user
                     sql = $@"SELECT 1 FROM information_schema.routines 
                             WHERE routine_schema = 'public' 
                             AND routine_name = '{objectName}'
                             AND has_function_privilege(current_user, routine_schema || '.' || routine_name, 'execute')";
                     break;
 
-                case DatabasePermission.ExecuteFunction:
-                    if (string.IsNullOrEmpty(objectName))
-                    {
-                        return (false, "Function name is required for EXECUTE permission test");
-                    }
-                    // Same as stored procedure check
-                    sql = $@"SELECT 1 FROM information_schema.routines 
-                            WHERE routine_schema = 'public' 
-                            AND routine_name = '{objectName}'
-                            AND has_function_privilege(current_user, routine_schema || '.' || routine_name, 'execute')";
-                    break;
-
-                case DatabasePermission.CreateView:
-                    sql = "CREATE OR REPLACE TEMP VIEW temp_view_test AS SELECT 1 AS num; DROP VIEW temp_view_test;";
-                    break;
-
-                case DatabasePermission.ModifyView:
+                case DatabasePermission.ALTER:
+                    // Test ability to alter objects (using a temporary view for safety)
                     sql = "CREATE OR REPLACE TEMP VIEW temp_view_test AS SELECT 1 AS num; ALTER VIEW temp_view_test RENAME TO temp_view_test_2; DROP VIEW temp_view_test_2;";
                     break;
 
-                case DatabasePermission.CreateIndex:
+                case DatabasePermission.REFERENCES:
+                    // Check if user has reference permission on any table
+                    sql = "SELECT 1 WHERE has_table_privilege(current_user, 'information_schema.tables', 'REFERENCES')";
+                    break;
+
+                case DatabasePermission.TRIGGER:
+                    // Check trigger permission
+                    sql = "SELECT 1 WHERE has_table_privilege(current_user, 'information_schema.tables', 'TRIGGER')";
+                    break;
+
+                case DatabasePermission.USAGE:
+                    // Check usage permission (for schemas)
+                    sql = "SELECT 1 WHERE has_schema_privilege(current_user, 'public', 'USAGE')";
+                    break;
+
+                case DatabasePermission.CONNECT:
+                    // Already connected if we're running this query
+                    sql = "SELECT 1";
+                    break;
+
+                case DatabasePermission.TEMPORARY:
+                    // Test ability to create temporary tables
+                    sql = "CREATE TEMP TABLE temp_permission_test (id int); DROP TABLE temp_permission_test;";
+                    break;
+
+                case DatabasePermission.TRUNCATE:
                     if (string.IsNullOrEmpty(objectName))
                     {
-                        return (false, "Table name is required for CREATE INDEX permission test");
+                        return (false, "Table name is required for TRUNCATE permission test");
                     }
-                    sql = $"DO $$ BEGIN EXECUTE 'EXPLAIN CREATE INDEX temp_idx ON {objectName} (id)'; EXCEPTION WHEN undefined_column THEN NULL; END $$;";
+                    // Check if can truncate (without actually doing it)
+                    sql = $"DO $$ BEGIN EXECUTE 'EXPLAIN TRUNCATE TABLE {objectName}'; EXCEPTION WHEN insufficient_privilege THEN RAISE EXCEPTION ''no permission''; END $$;";
                     break;
 
-                case DatabasePermission.GrantPermission:
-                    // Check if user has permission to grant any privilege
-                    sql = "SELECT 1 WHERE has_any_column_privilege(current_user, 'information_schema.columns', 'GRANT OPTION');";
-                    break;
-
-                case DatabasePermission.RevokePermission:
-                    // If user can grant, they can also revoke
-                    sql = "SELECT 1 WHERE has_any_column_privilege(current_user, 'information_schema.columns', 'GRANT OPTION');";
-                    break;
-
-                case DatabasePermission.AccessSystemTables:
-                    // Try to access pg_catalog or information_schema
-                    sql = "SELECT 1 FROM pg_catalog.pg_tables LIMIT 1";
-                    break;
-
-                case DatabasePermission.AccessInformationSchema:
-                    sql = "SELECT 1 FROM information_schema.tables LIMIT 1";
+                case DatabasePermission.ALL:
+                    // For ALL, we'll just test a basic permission
+                    sql = "SELECT 1 FROM information_schema.tables LIMIT 1;";
                     break;
 
                 default:

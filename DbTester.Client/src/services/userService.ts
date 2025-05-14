@@ -6,6 +6,7 @@ import {
   type UserResponse,
   type ValidateUserRequest,
   type ValidateUserResponse,
+  type UserPermission,
 } from "../models/userTypes";
 
 export const userService = {
@@ -23,7 +24,6 @@ export const userService = {
       };
     }
   },
-
   // Get a specific user by ID
   async getUser(id: string): Promise<UserResponse> {
     try {
@@ -37,7 +37,6 @@ export const userService = {
       };
     }
   },
-
   // Create a new user
   async createUser(user: TestUser): Promise<UserResponse> {
     try {
@@ -55,7 +54,6 @@ export const userService = {
       };
     }
   },
-
   // Update an existing user
   async updateUser(id: string, user: TestUser): Promise<UserResponse> {
     try {

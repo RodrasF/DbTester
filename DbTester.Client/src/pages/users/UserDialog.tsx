@@ -22,9 +22,21 @@ import {
   DatabasePermissions,
   type DatabasePermission,
   type TestUser,
+  type UserPermission,
 } from "@/models/userTypes";
 import { connectionService } from "@/services/connectionService";
 import { Label } from "@/components/ui/label";
+import { PermissionItem } from "@/components/user/PermissionItem";
+
+// Define which permissions require object names
+const permissionsRequiringObjectNames: DatabasePermission[] = [
+  DatabasePermissions.SELECT,
+  DatabasePermissions.INSERT,
+  DatabasePermissions.UPDATE,
+  DatabasePermissions.DELETE,
+  DatabasePermissions.EXECUTE,
+  DatabasePermissions.TRUNCATE,
+];
 
 interface UserDialogProps {
   open: boolean;
@@ -54,13 +66,12 @@ export function UserDialog({
       loadConnections();
     }
   }, [open]);
-
   // Reset form when user changes or dialog opens/closes
   useEffect(() => {
     if (user) {
       setFormData({ ...user, password: "" });
     } else {
-      setFormData({ permissions: [] });
+      setFormData({ expectedPermissions: [] });
     }
   }, [user, open]);
 
@@ -98,40 +109,53 @@ export function UserDialog({
       connectionName: connection?.name,
     });
   };
-
-  const handlePermissionChange = (
-    permission: DatabasePermission,
-    checked: boolean
-  ) => {
-    const currentPermissions = formData.permissions || [];
+  const handlePermissionChange = (updatedPermission: UserPermission) => {
+    const currentPermissions = formData.expectedPermissions || [];
 
     // Special handling for ALL permission
-    if (permission === DatabasePermissions.ALL && checked) {
-      // If checking ALL, clear other permissions
-      setFormData({ ...formData, permissions: [DatabasePermissions.ALL] });
+    if (
+      updatedPermission.permission === DatabasePermissions.ALL &&
+      updatedPermission.isGranted
+    ) {
+      // If adding ALL, clear other permissions
+      setFormData({
+        ...formData,
+        expectedPermissions: [
+          {
+            permission: DatabasePermissions.ALL,
+            isGranted: true,
+            objectName: null,
+          },
+        ],
+      });
       return;
     }
 
-    // If checking any permission other than ALL, remove ALL if it exists
-    let updatedPermissions: DatabasePermission[] = [...currentPermissions];
-
-    if (permission !== DatabasePermissions.ALL) {
-      // Remove ALL if it's in the list
+    // Filter out ALL permission if adding other permission
+    let updatedPermissions = [...currentPermissions];
+    if (updatedPermission.permission !== DatabasePermissions.ALL) {
       updatedPermissions = updatedPermissions.filter(
-        (p) => p !== DatabasePermissions.ALL
+        (p) => p.permission !== DatabasePermissions.ALL
       );
     }
 
-    // Add or remove the permission
-    if (checked) {
-      updatedPermissions.push(permission);
+    // Add or update permission
+    if (updatedPermission.isGranted) {
+      // Remove existing permission if present
+      updatedPermissions = updatedPermissions.filter(
+        (p) => p.permission !== updatedPermission.permission
+      );
+      // Add the new/updated permission
+      updatedPermissions.push(updatedPermission);
     } else {
-      updatedPermissions = updatedPermissions.filter((p) => p !== permission);
+      // Remove permission if isGranted is false
+      updatedPermissions = updatedPermissions.filter(
+        (p) => p.permission !== updatedPermission.permission
+      );
     }
 
-    setFormData({ ...formData, permissions: updatedPermissions });
+    setFormData({ ...formData, expectedPermissions: updatedPermissions });
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Validate form
@@ -152,11 +176,33 @@ export function UserDialog({
     }
 
     // If array is empty, don't submit
-    if (!formData.permissions || formData.permissions.length === 0) {
+    if (
+      !formData.expectedPermissions ||
+      formData.expectedPermissions.length === 0
+    ) {
       alert("Please select at least one permission");
       return;
     }
 
+    // Check if object names are required for any selected permissions
+    const missingObjectNames = formData.expectedPermissions.filter(
+      (p) =>
+        permissionsRequiringObjectNames.includes(p.permission) &&
+        p.isGranted &&
+        (!p.objectName || p.objectName.trim() === "")
+    );
+
+    if (missingObjectNames.length > 0) {
+      const missingPermNames = missingObjectNames
+        .map((p) => p.permission)
+        .join(", ");
+      alert(
+        `Please provide object names for the following permissions: ${missingPermNames}`
+      );
+      return;
+    }
+
+    // Send user data directly without permissionDetails
     onSubmit(formData as TestUser);
   };
 
@@ -273,114 +319,118 @@ export function UserDialog({
             <div className="grid grid-cols-4 items-start gap-4">
               <Label className="text-right pt-2">Permissions*</Label>
               <div className="col-span-3 space-y-4">
+                {" "}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Basic Permissions</h4>
-                  <div className="grid grid-cols-2">
-                    {permissionGroups.basic.map((permission) => (
-                      <div
-                        key={permission}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`permission-${permission}`}
-                          checked={formData.permissions?.includes(permission)}
-                          onCheckedChange={(checked) =>
-                            handlePermissionChange(
-                              permission,
-                              checked as boolean
-                            )
-                          }
-                          disabled={formData.permissions?.includes(
-                            DatabasePermissions.ALL
+                  <div className="grid grid-cols-2 gap-2">
+                    {permissionGroups.basic.map((permissionType) => {
+                      const existingPermission =
+                        formData.expectedPermissions?.find(
+                          (p) => p.permission === permissionType
+                        );
+                      const checked = Boolean(existingPermission?.isGranted);
+                      const hasAllPermission =
+                        formData.expectedPermissions?.some(
+                          (p) =>
+                            p.permission === DatabasePermissions.ALL &&
+                            p.isGranted
+                        );
+
+                      return (
+                        <PermissionItem
+                          key={permissionType}
+                          permission={permissionType}
+                          checked={checked}
+                          objectName={existingPermission?.objectName}
+                          onChange={handlePermissionChange}
+                          disabled={Boolean(hasAllPermission)}
+                          requiresObjectName={permissionsRequiringObjectNames.includes(
+                            permissionType
                           )}
                         />
-                        <label
-                          htmlFor={`permission-${permission}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {permission}
-                        </label>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
-                </div>
-
+                </div>{" "}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Schema Permissions</h4>
-                  <div className="grid grid-cols-2">
-                    {permissionGroups.schema.map((permission) => (
-                      <div
-                        key={permission}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`permission-${permission}`}
-                          checked={formData.permissions?.includes(permission)}
-                          onCheckedChange={(checked) =>
-                            handlePermissionChange(
-                              permission,
-                              checked as boolean
-                            )
-                          }
-                          disabled={formData.permissions?.includes(
-                            DatabasePermissions.ALL
+                  <div className="grid grid-cols-2 gap-2">
+                    {permissionGroups.schema.map((permissionType) => {
+                      const existingPermission =
+                        formData.expectedPermissions?.find(
+                          (p) => p.permission === permissionType
+                        );
+                      const checked = Boolean(existingPermission?.isGranted);
+                      const hasAllPermission =
+                        formData.expectedPermissions?.some(
+                          (p) =>
+                            p.permission === DatabasePermissions.ALL &&
+                            p.isGranted
+                        );
+
+                      return (
+                        <PermissionItem
+                          key={permissionType}
+                          permission={permissionType}
+                          checked={checked}
+                          objectName={existingPermission?.objectName}
+                          onChange={handlePermissionChange}
+                          disabled={Boolean(hasAllPermission)}
+                          requiresObjectName={permissionsRequiringObjectNames.includes(
+                            permissionType
                           )}
                         />
-                        <label
-                          htmlFor={`permission-${permission}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {permission}
-                        </label>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
-                </div>
-
+                </div>{" "}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Other Permissions</h4>
-                  <div className="grid grid-cols-2">
-                    {permissionGroups.other.map((permission) => (
-                      <div
-                        key={permission}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`permission-${permission}`}
-                          checked={formData.permissions?.includes(permission)}
-                          onCheckedChange={(checked) =>
-                            handlePermissionChange(
-                              permission,
-                              checked as boolean
-                            )
-                          }
-                          disabled={formData.permissions?.includes(
-                            DatabasePermissions.ALL
+                  <div className="grid grid-cols-2 gap-2">
+                    {permissionGroups.other.map((permissionType) => {
+                      const existingPermission =
+                        formData.expectedPermissions?.find(
+                          (p) => p.permission === permissionType
+                        );
+                      const checked = Boolean(existingPermission?.isGranted);
+                      const hasAllPermission =
+                        formData.expectedPermissions?.some(
+                          (p) =>
+                            p.permission === DatabasePermissions.ALL &&
+                            p.isGranted
+                        );
+
+                      return (
+                        <PermissionItem
+                          key={permissionType}
+                          permission={permissionType}
+                          checked={checked}
+                          objectName={existingPermission?.objectName}
+                          onChange={handlePermissionChange}
+                          disabled={Boolean(hasAllPermission)}
+                          requiresObjectName={permissionsRequiringObjectNames.includes(
+                            permissionType
                           )}
                         />
-                        <label
-                          htmlFor={`permission-${permission}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {permission}
-                        </label>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
-                </div>
-
+                </div>{" "}
                 <div className="pt-2 border-t">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="permission-ALL"
-                      checked={formData.permissions?.includes(
-                        DatabasePermissions.ALL
+                      checked={formData.expectedPermissions?.some(
+                        (p) =>
+                          p.permission === DatabasePermissions.ALL &&
+                          p.isGranted
                       )}
                       onCheckedChange={(checked) =>
-                        handlePermissionChange(
-                          DatabasePermissions.ALL,
-                          checked as boolean
-                        )
+                        handlePermissionChange({
+                          permission: DatabasePermissions.ALL,
+                          objectName: null,
+                          isGranted: checked === true,
+                        })
                       }
                     />
                     <label
@@ -391,7 +441,8 @@ export function UserDialog({
                     </label>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Grants all permissions to this user
+                    Grants all permissions to this user (no object names
+                    required)
                   </p>
                 </div>
               </div>

@@ -11,7 +11,7 @@ import {
 import { userService } from "@/services/userService";
 import {
   type TestUser,
-  type DatabasePermission,
+  type UserPermission,
   DatabasePermissions,
 } from "@/models/userTypes";
 import { Badge } from "@/components/ui/badge";
@@ -183,21 +183,22 @@ export function UsersPage() {
       setIsSubmitting(false);
     }
   };
-
   // Helper for displaying permissions
-  const getPermissionBadges = (permissions: DatabasePermission[]) => {
+  const getPermissionBadges = (permissions: UserPermission[]) => {
     // Group permissions by category
     const basicPermissions = ["SELECT", "INSERT", "UPDATE", "DELETE"];
     const adminPermissions = ["CREATE", "ALTER", "DROP", "TRUNCATE"];
 
-    // Count how many of each category
-    const basicCount = permissions.filter((p) =>
-      basicPermissions.includes(p)
+    // Count how many of each category - only count granted permissions
+    const grantedPermissions = permissions.filter((p) => p.isGranted);
+
+    const basicCount = grantedPermissions.filter((p) =>
+      basicPermissions.includes(p.permission)
     ).length;
-    const adminCount = permissions.filter((p) =>
-      adminPermissions.includes(p)
+    const adminCount = grantedPermissions.filter((p) =>
+      adminPermissions.includes(p.permission)
     ).length;
-    const otherCount = permissions.length - basicCount - adminCount;
+    const otherCount = grantedPermissions.length - basicCount - adminCount;
 
     return (
       <div className="flex flex-wrap gap-1">
@@ -215,8 +216,10 @@ export function UsersPage() {
           <Badge variant="outline" className="bg-gray-50">
             {otherCount} Other
           </Badge>
-        )}
-        {permissions.includes(DatabasePermissions.ALL) && (
+        )}{" "}
+        {permissions.some(
+          (p) => p.permission === DatabasePermissions.ALL && p.isGranted
+        ) && (
           <Badge variant="outline" className="bg-red-50">
             ALL
           </Badge>
@@ -295,7 +298,7 @@ export function UsersPage() {
                   )}
                   <div>
                     <h4 className="text-sm font-medium mb-1">Permissions:</h4>
-                    {getPermissionBadges(user.permissions)}
+                    {getPermissionBadges(user.expectedPermissions)}
                   </div>
 
                   <div className="text-xs text-muted-foreground">

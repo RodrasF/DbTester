@@ -18,9 +18,6 @@ public class TestUserConfiguration : IEntityTypeConfiguration<TestUser>
             .IsRequired()
             .HasMaxLength(500);
 
-        builder.Property(u => u.AssignedRole)
-            .HasMaxLength(100);
-
         // Add indexes
         builder.HasIndex(u => u.Username);
     }

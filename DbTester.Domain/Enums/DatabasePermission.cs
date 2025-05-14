@@ -2,26 +2,26 @@ namespace DbTester.Domain.Enums;
 
 public enum DatabasePermission
 {
-    // Table operations
-    CreateTable,
-    DropTable,
-    SelectTable,
-    InsertTable,
-    UpdateTable,
-    DeleteTable,
+    // Basic operations
+    SELECT,
+    INSERT,
+    UPDATE,
+    DELETE,
 
-    // Other database objects
-    ExecuteStoredProcedure,
-    ExecuteFunction,
-    CreateView,
-    ModifyView,
-    CreateIndex,
+    // DDL operations
+    CREATE,
+    ALTER,
+    DROP,
+    TRUNCATE,
 
-    // Security operations
-    GrantPermission,
-    RevokePermission,
+    // Additional permissions
+    REFERENCES,
+    TRIGGER,
+    USAGE,
+    CONNECT,
+    TEMPORARY,
+    EXECUTE,
 
-    // System access
-    AccessSystemTables,
-    AccessInformationSchema
+    // Special
+    ALL
 }

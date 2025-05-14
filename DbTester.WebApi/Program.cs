@@ -1,6 +1,7 @@
 using DbTester.Application.Authentication;
 using DbTester.Application.ConnectionManagement;
 using DbTester.Application.Interfaces;
+using DbTester.Application.UserManagement;
 using DbTester.Infrastructure.Data;
 using DbTester.Infrastructure.Repositories;
 using DbTester.Infrastructure.Security;
@@ -39,6 +40,7 @@ builder.Services.AddScoped<DbInitializer>();
 // Register validators
 builder.Services.AddValidatorsFromAssemblyContaining<CreateDatabaseConnectionValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateTestUserRequestValidator>();
 
 // Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

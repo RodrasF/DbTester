@@ -32,6 +32,12 @@ public class ApplicationDbContext : DbContext
 
         // Configure the UserPermission class which is owned by TestUser
         modelBuilder.Entity<TestUser>()
+            .HasOne(u => u.Connection)
+            .WithMany()
+            .HasForeignKey(c => c.ConnectionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TestUser>()
             .OwnsMany(u => u.ExpectedPermissions, builder =>
             {
                 builder.ToTable("UserPermissions");

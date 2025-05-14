@@ -7,10 +7,14 @@ public class TestUserDto
 {
     public Guid Id { get; set; }
     public string Username { get; set; } = string.Empty;
-    public string? AssignedRole { get; set; }
+    public Guid ConnectionId { get; set; }
+    public string? ConnectionName { get; set; }
+    public string? Description { get; set; }
     public List<UserPermissionDto> ExpectedPermissions { get; set; } = new List<UserPermissionDto>();
     public DateTime CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }
+    public bool IsValid { get; set; }
+    public DateTime? LastValidationDate { get; set; }
 }
 
 public class UserPermissionDto
@@ -24,17 +28,19 @@ public class CreateTestUserRequest
 {
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
-    public string? AssignedRole { get; set; }
+    public Guid ConnectionId { get; set; }
+    public string? Description { get; set; }
     public List<UserPermissionDto> ExpectedPermissions { get; set; } = new List<UserPermissionDto>();
 }
 
 public class UpdateTestUserRequest
 {
     public Guid Id { get; set; }
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty; // Leave empty to keep existing password
-    public string? AssignedRole { get; set; }
-    public List<UserPermissionDto> ExpectedPermissions { get; set; } = new List<UserPermissionDto>();
+    public string? Username { get; set; }
+    public string? Password { get; set; }
+    public Guid? ConnectionId { get; set; }
+    public string? Description { get; set; }
+    public List<UserPermissionDto>? ExpectedPermissions { get; set; }
 }
 
 public class TestUserResponse : BaseResponse

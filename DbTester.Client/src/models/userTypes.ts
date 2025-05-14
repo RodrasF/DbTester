@@ -6,11 +6,18 @@ export interface TestUser {
   connectionId: string;
   connectionName?: string; // For display purposes
   description?: string;
-  permissions: DatabasePermission[];
+  expectedPermissions: UserPermission[];
   createdAt?: string;
   modifiedAt?: string;
   isValid?: boolean;
   lastValidationDate?: string;
+}
+
+// This matches the backend UserPermission class and is used for API communication
+export interface UserPermission {
+  permission: DatabasePermission;
+  objectName?: string | null;
+  isGranted: boolean; // True if user should have permission, false if they should not
 }
 
 export const DatabasePermissions = {

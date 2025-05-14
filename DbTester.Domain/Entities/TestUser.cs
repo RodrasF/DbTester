@@ -10,11 +10,19 @@ public class TestUser : BaseEntity
     // Password is stored encrypted
     public string EncryptedPassword { get; set; } = string.Empty;
 
+    // Connection this user belongs to
+    public Guid ConnectionId { get; set; }
+    public DatabaseConnection? Connection { get; set; }
+
+    // User description
+    public string? Description { get; set; }
+
     // Expected permissions for this user
     public List<UserPermission> ExpectedPermissions { get; set; } = new List<UserPermission>();
 
-    // Role assignment (if applicable)
-    public string? AssignedRole { get; set; }
+    // Validation status
+    public bool IsValid { get; set; }
+    public DateTime? LastValidationDate { get; set; }
 }
 
 public class UserPermission

@@ -1,6 +1,7 @@
 using DbTester.Application.Interfaces;
 using DbTester.Application.UserManagement;
 using DbTester.Domain.Entities;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DbTester.WebApi.Controllers;
@@ -12,15 +13,21 @@ public class UsersController : ControllerBase
     private readonly ITestUserRepository _userRepository;
     private readonly IDatabaseConnectionRepository _connectionRepository;
     private readonly IEncryptionService _encryptionService;
+    private readonly IValidator<CreateTestUserRequest> _createUserValidator;
+    private readonly IValidator<UpdateTestUserRequest> _updateUserValidator;
 
     public UsersController(
         ITestUserRepository userRepository,
         IDatabaseConnectionRepository connectionRepository,
-        IEncryptionService encryptionService)
+        IEncryptionService encryptionService,
+        IValidator<CreateTestUserRequest> createUserValidator,
+        IValidator<UpdateTestUserRequest> updateUserValidator)
     {
         _userRepository = userRepository;
         _connectionRepository = connectionRepository;
         _encryptionService = encryptionService;
+        _createUserValidator = createUserValidator;
+        _updateUserValidator = updateUserValidator;
     }
 
     [HttpGet]
@@ -65,25 +72,40 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TestUserResponse>> CreateUser(CreateTestUserRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+        var validationResult = await _createUserValidator.ValidateAsync(request);
+        if (!validationResult.IsValid)
         {
             return BadRequest(new TestUserResponse
             {
                 Success = false,
-                Message = "Username and password are required"
+                Message = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage))
             });
         }
+
+        // Find the connection first since it's required
+        var connection = await _connectionRepository.GetByIdAsync(request.ConnectionId);
+        if (connection == null)
+        {
+            return BadRequest(new TestUserResponse
+            {
+                Success = false,
+                Message = "Invalid connection ID"
+            });
+        }
+
         var user = new TestUser
         {
             Username = request.Username,
             EncryptedPassword = _encryptionService.Encrypt(request.Password),
-            AssignedRole = request.AssignedRole,
-            ExpectedPermissions = request.ExpectedPermissions.Select(p => new UserPermission
+            ConnectionId = request.ConnectionId,
+            Connection = connection,
+            Description = request.Description,
+            ExpectedPermissions = [.. request.ExpectedPermissions.Select(p => new UserPermission
             {
                 Permission = p.Permission,
                 ObjectName = p.ObjectName,
                 IsGranted = p.IsGranted
-            }).ToList()
+            })]
         };
 
         var createdUser = await _userRepository.AddAsync(user);
@@ -110,8 +132,17 @@ public class UsersController : ControllerBase
             });
         }
 
-        var existingUser = await _userRepository.GetByIdAsync(id);
+        var validationResult = await _updateUserValidator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new TestUserResponse
+            {
+                Success = false,
+                Message = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage))
+            });
+        }
 
+        var existingUser = await _userRepository.GetByIdAsync(id);
         if (existingUser == null)
         {
             return NotFound(new TestUserResponse
@@ -120,24 +151,62 @@ public class UsersController : ControllerBase
                 Message = "User not found"
             });
         }
-        existingUser.Username = request.Username;
+
+        // Only update username if a new one was provided
+        if (request.Username != null)
+        {
+            var existingUserWithSameUsername = await _userRepository.GetByUsernameAsync(request.Username);
+            if (existingUserWithSameUsername != null && existingUserWithSameUsername.Id != id)
+            {
+                return BadRequest(new TestUserResponse
+                {
+                    Success = false,
+                    Message = "Username already exists"
+                });
+            }
+            existingUser.Username = request.Username;
+        }
 
         // Only update password if a new one was provided
-        if (!string.IsNullOrWhiteSpace(request.Password))
+        if (request.Password != null)
         {
             existingUser.EncryptedPassword = _encryptionService.Encrypt(request.Password);
         }
 
-        existingUser.AssignedRole = request.AssignedRole;
-
-        // Update permissions
-        existingUser.ExpectedPermissions.Clear();
-        existingUser.ExpectedPermissions.AddRange(request.ExpectedPermissions.Select(p => new UserPermission
+        // Only update connection if a new one was provided
+        if (request.ConnectionId.HasValue)
         {
-            Permission = p.Permission,
-            ObjectName = p.ObjectName,
-            IsGranted = p.IsGranted
-        }));
+            var connection = await _connectionRepository.GetByIdAsync(request.ConnectionId.Value);
+            if (connection == null)
+            {
+                return BadRequest(new TestUserResponse
+                {
+                    Success = false,
+                    Message = "Invalid connection ID"
+                });
+            }
+
+            existingUser.ConnectionId = request.ConnectionId.Value;
+            existingUser.Connection = connection;
+        }
+
+        // Only update description if a new one was provided
+        if (request.Description != null)
+        {
+            existingUser.Description = request.Description;
+        }
+
+        // Only update permissions if new ones were provided
+        if (request.ExpectedPermissions != null)
+        {
+            existingUser.ExpectedPermissions.Clear();
+            existingUser.ExpectedPermissions.AddRange(request.ExpectedPermissions.Select(p => new UserPermission
+            {
+                Permission = p.Permission,
+                ObjectName = p.ObjectName,
+                IsGranted = p.IsGranted
+            }));
+        }
 
         await _userRepository.UpdateAsync(existingUser);
 
@@ -215,15 +284,19 @@ public class UsersController : ControllerBase
         {
             Id = user.Id,
             Username = user.Username,
-            AssignedRole = user.AssignedRole,
-            ExpectedPermissions = user.ExpectedPermissions.Select(p => new UserPermissionDto
+            ConnectionId = user.ConnectionId,
+            ConnectionName = user.Connection?.Name,
+            Description = user.Description,
+            ExpectedPermissions = [.. user.ExpectedPermissions.Select(p => new UserPermissionDto
             {
                 Permission = p.Permission,
                 ObjectName = p.ObjectName,
                 IsGranted = p.IsGranted
-            }).ToList(),
+            })],
             CreatedAt = user.CreatedAt,
-            ModifiedAt = user.ModifiedAt
+            ModifiedAt = user.ModifiedAt,
+            IsValid = user.IsValid,
+            LastValidationDate = user.LastValidationDate
         };
     }
 }
