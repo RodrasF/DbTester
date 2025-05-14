@@ -6,7 +6,6 @@ namespace DbTester.Application.UserManagement;
 public class TestUserDto
 {
     public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string? AssignedRole { get; set; }
     public List<UserPermissionDto> ExpectedPermissions { get; set; } = new List<UserPermissionDto>();
@@ -23,7 +22,6 @@ public class UserPermissionDto
 
 public class CreateTestUserRequest
 {
-    public string Name { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string? AssignedRole { get; set; }
@@ -33,7 +31,6 @@ public class CreateTestUserRequest
 public class UpdateTestUserRequest
 {
     public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty; // Leave empty to keep existing password
     public string? AssignedRole { get; set; }

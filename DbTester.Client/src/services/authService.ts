@@ -7,7 +7,7 @@ import {
   type RegisterResponse,
   type UserResponse,
   type User,
-} from "./authTypes";
+} from "../models/authTypes";
 
 // Local storage keys
 export const TOKEN_KEY = "dbtester_token";

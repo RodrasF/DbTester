@@ -1,6 +1,6 @@
 import { AuthContext, type AuthContextType } from "@/context/AuthContext";
 import { authService } from "@/services/authService";
-import type { User } from "@/services/authTypes";
+import type { User } from "@/models/authTypes";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 

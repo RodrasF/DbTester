@@ -5,7 +5,6 @@ namespace DbTester.Domain.Entities;
 
 public class TestUser : BaseEntity
 {
-    public string Name { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
 
     // Password is stored encrypted

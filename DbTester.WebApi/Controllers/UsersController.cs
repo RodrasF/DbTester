@@ -65,17 +65,16 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TestUserResponse>> CreateUser(CreateTestUserRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
         {
             return BadRequest(new TestUserResponse
             {
                 Success = false,
-                Message = "Name, username, and password are required"
+                Message = "Username and password are required"
             });
         }
         var user = new TestUser
         {
-            Name = request.Name,
             Username = request.Username,
             EncryptedPassword = _encryptionService.Encrypt(request.Password),
             AssignedRole = request.AssignedRole,
@@ -121,7 +120,6 @@ public class UsersController : ControllerBase
                 Message = "User not found"
             });
         }
-        existingUser.Name = request.Name;
         existingUser.Username = request.Username;
 
         // Only update password if a new one was provided
@@ -175,6 +173,7 @@ public class UsersController : ControllerBase
             Message = "User deleted successfully"
         });
     }
+
     [HttpPost("verify")]
     public async Task<ActionResult<VerifyUserExistsResponse>> VerifyUserExists(VerifyUserExistsRequest request)
     {
@@ -209,12 +208,12 @@ public class UsersController : ControllerBase
             Exists = exists
         });
     }
+
     private static TestUserDto MapToDto(TestUser user)
     {
         return new TestUserDto
         {
             Id = user.Id,
-            Name = user.Name,
             Username = user.Username,
             AssignedRole = user.AssignedRole,
             ExpectedPermissions = user.ExpectedPermissions.Select(p => new UserPermissionDto

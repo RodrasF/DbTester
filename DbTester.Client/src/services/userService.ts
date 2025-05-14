@@ -6,7 +6,7 @@ import {
   type UserResponse,
   type ValidateUserRequest,
   type ValidateUserResponse,
-} from "./userTypes";
+} from "../models/userTypes";
 
 export const userService = {
   // Get all test users

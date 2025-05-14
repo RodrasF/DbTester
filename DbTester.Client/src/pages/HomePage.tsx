@@ -28,8 +28,8 @@ import { workflowService } from "@/services/workflowService";
 import type {
   TestWorkflow,
   TestRun as WorkflowTestRun,
-} from "@/services/workflowTypes";
-import type { TestUser } from "@/services/userTypes";
+} from "@/models/workflowTypes";
+import type { TestUser } from "@/models/userTypes";
 import { useAuth } from "@/hooks/useAuth";
 
 // Define error state interfaces

@@ -4,7 +4,7 @@ import { Check, X, Clock, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { workflowService } from "@/services/workflowService";
-import { type TestRun } from "@/services/workflowTypes";
+import { type TestRun } from "@/models/workflowTypes";
 import { toast } from "sonner";
 
 export function ResultsPage() {

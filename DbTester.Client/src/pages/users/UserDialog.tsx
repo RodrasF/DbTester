@@ -22,7 +22,7 @@ import {
   DatabasePermissions,
   type DatabasePermission,
   type TestUser,
-} from "@/services/userTypes";
+} from "@/models/userTypes";
 import { connectionService } from "@/services/connectionService";
 import { Label } from "@/components/ui/label";
 

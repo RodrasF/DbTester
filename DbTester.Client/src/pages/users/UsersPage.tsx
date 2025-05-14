@@ -13,7 +13,7 @@ import {
   type TestUser,
   type DatabasePermission,
   DatabasePermissions,
-} from "@/services/userTypes";
+} from "@/models/userTypes";
 import { Badge } from "@/components/ui/badge";
 import { UserDialog } from "./UserDialog";
 import { toast } from "sonner";

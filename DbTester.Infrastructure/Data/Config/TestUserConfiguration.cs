@@ -10,10 +10,6 @@ public class TestUserConfiguration : IEntityTypeConfiguration<TestUser>
     {
         builder.ToTable("TestUsers");
 
-        builder.Property(u => u.Name)
-            .IsRequired()
-            .HasMaxLength(100);
-
         builder.Property(u => u.Username)
             .IsRequired()
             .HasMaxLength(100);

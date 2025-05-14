@@ -11,10 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { workflowService } from "@/services/workflowService";
-import {
-  type TestWorkflow,
-  type TestOperation,
-} from "@/services/workflowTypes";
+import { type TestWorkflow, type TestOperation } from "@/models/workflowTypes";
 import { WorkflowDialog } from "./WorkflowDialog";
 import { toast } from "sonner";
 

@@ -5,7 +5,7 @@ import {
   type WorkflowResponse,
   type TestRunResponse,
   type TestRunListResponse,
-} from "./workflowTypes";
+} from "../models/workflowTypes";
 
 export const workflowService = {
   // Get all workflows

@@ -24,7 +24,7 @@ import {
   type TestOperation,
   type TestOperationType,
   TestOperationTypes,
-} from "@/services/workflowTypes";
+} from "@/models/workflowTypes";
 import { PlusCircle, X, GripVertical, MoveUp, MoveDown } from "lucide-react";
 import { connectionService } from "@/services/connectionService";
 import { userService } from "@/services/userService";
