@@ -10,8 +10,8 @@ import {
 } from "./authTypes";
 
 // Local storage keys
-const TOKEN_KEY = "dbtester_token";
-const USER_KEY = "dbtester_user";
+export const TOKEN_KEY = "dbtester_token";
+export const USER_KEY = "dbtester_user";
 
 export const authService = {
   // Login user

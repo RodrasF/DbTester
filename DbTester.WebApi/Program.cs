@@ -48,7 +48,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                builder.Configuration["JwtSettings:Key"] ?? "DefaultDevelopmentKeyForDbTesterAppSecurity12345")),
+                builder.Configuration["JwtSettings:Key"] ?? throw new InvalidOperationException("JWT key is not configured"))),
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
