@@ -6,7 +6,8 @@ public static class DbInitializerExtensions
 {
     public static async Task InitializeDatabaseAsync(this WebApplication app)
     {
-        await app.Services.GetRequiredService<DbInitializer>()
+        using var scope = app.Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<DbInitializer>()
             .InitializeAsync();
     }
 }

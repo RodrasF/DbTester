@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbTester.Infrastructure", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbTester.WebApi", "DbTester.WebApi\DbTester.WebApi.csproj", "{639B1EEF-072F-4927-8253-CE14068FA0BB}"
 EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "DbTester.Client", "DbTester.Client\DbTester.Client.esproj", "{32CED381-CDA2-327E-FA5A-D79F773028CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,24 @@ Global
 		{639B1EEF-072F-4927-8253-CE14068FA0BB}.Release|x64.Build.0 = Release|Any CPU
 		{639B1EEF-072F-4927-8253-CE14068FA0BB}.Release|x86.ActiveCfg = Release|Any CPU
 		{639B1EEF-072F-4927-8253-CE14068FA0BB}.Release|x86.Build.0 = Release|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Debug|x64.Build.0 = Debug|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Debug|x64.Deploy.0 = Debug|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Debug|x86.Build.0 = Debug|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Debug|x86.Deploy.0 = Debug|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Release|x64.ActiveCfg = Release|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Release|x64.Build.0 = Release|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Release|x64.Deploy.0 = Release|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Release|x86.ActiveCfg = Release|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Release|x86.Build.0 = Release|Any CPU
+		{32CED381-CDA2-327E-FA5A-D79F773028CE}.Release|x86.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
