@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import api, { type ApiResponse } from "./api";
 
 // Types
@@ -56,8 +57,11 @@ export const connectionService = {
       console.error("Error fetching connections:", error);
       return {
         success: false,
-        message:
-          error instanceof Error ? error.message : "Error fetching connections",
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : "Error fetching connections",
         connections: [],
       };
     }
@@ -71,10 +75,11 @@ export const connectionService = {
       console.error(`Error fetching connection ${id}:`, error);
       return {
         success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : `Error fetching connection ${id}`,
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : `Error fetching connection ${id}`,
       };
     }
   },
@@ -92,8 +97,11 @@ export const connectionService = {
       console.error("Error creating connection:", error);
       return {
         success: false,
-        message:
-          error instanceof Error ? error.message : "Error creating connection",
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : "Error creating connection",
       };
     }
   },
@@ -112,10 +120,11 @@ export const connectionService = {
       console.error(`Error updating connection ${id}:`, error);
       return {
         success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : `Error updating connection ${id}`,
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : `Error updating connection ${id}`,
       };
     }
   },
@@ -130,10 +139,11 @@ export const connectionService = {
       console.error(`Error deleting connection ${id}:`, error);
       return {
         success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : `Error deleting connection ${id}`,
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : `Error deleting connection ${id}`,
       };
     }
   },
@@ -151,8 +161,11 @@ export const connectionService = {
       console.error("Error testing connection:", error);
       return {
         success: false,
-        message:
-          error instanceof Error ? error.message : "Error testing connection",
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : "Error testing connection",
         isConnectionValid: false,
       };
     }

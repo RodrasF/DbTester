@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import api, { type ApiResponse } from "./api";
 import {
   type TestUser,
@@ -46,7 +47,11 @@ export const userService = {
       console.error("Error creating test user:", error);
       return {
         success: false,
-        message: "Failed to create test user",
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : "Failed to create test user",
       };
     }
   },
@@ -60,7 +65,11 @@ export const userService = {
       console.error(`Error updating test user ${id}:`, error);
       return {
         success: false,
-        message: "Failed to update test user",
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : "Failed to update test user",
       };
     }
   },
@@ -74,7 +83,11 @@ export const userService = {
       console.error(`Error deleting test user ${id}:`, error);
       return {
         success: false,
-        message: "Failed to delete test user",
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : "Failed to delete test user",
       };
     }
   },
@@ -93,8 +106,11 @@ export const userService = {
       console.error("Error validating user:", error);
       return {
         success: false,
-        message:
-          error instanceof Error ? error.message : "Failed to validate user",
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : "Failed to validate user",
         isValid: false,
         details: {
           grantedPermissions: [],
@@ -118,10 +134,11 @@ export const userService = {
       );
       return {
         success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : `Error fetching users for connection ${connectionId}`,
+        message: isAxiosError(error)
+          ? error.response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : `Error fetching users for connection ${connectionId}`,
         users: [],
       };
     }
