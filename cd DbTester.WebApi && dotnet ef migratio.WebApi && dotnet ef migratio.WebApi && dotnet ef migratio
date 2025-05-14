@@ -1,1 +1,0 @@
-cd DbTester.WebApi && dotnet ef migrations add InitialCreate --project ../DbTester.Infrastructure --startup-project ./DbTester.WebApi.csproj --context ApplicationDbContext --output-dir Data/Migrations
