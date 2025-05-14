@@ -9,11 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { userService } from "@/services/userService";
-import {
-  type TestUser,
-  type UserPermission,
-  DatabasePermissions,
-} from "@/models/userTypes";
+import { type TestUser, type UserPermission } from "@/models/userTypes";
 import { Badge } from "@/components/ui/badge";
 import { UserDialog } from "./UserDialog";
 import { toast } from "sonner";
@@ -211,17 +207,10 @@ export function UsersPage() {
           <Badge variant="outline" className="bg-amber-50">
             {adminCount} Admin
           </Badge>
-        )}
+        )}{" "}
         {otherCount > 0 && (
           <Badge variant="outline" className="bg-gray-50">
             {otherCount} Other
-          </Badge>
-        )}{" "}
-        {permissions.some(
-          (p) => p.permission === DatabasePermissions.ALL && p.isGranted
-        ) && (
-          <Badge variant="outline" className="bg-red-50">
-            ALL
           </Badge>
         )}
       </div>

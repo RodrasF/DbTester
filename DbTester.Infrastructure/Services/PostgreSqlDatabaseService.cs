@@ -210,13 +210,9 @@ public class PostgreSqlDatabaseService : IDatabaseService
                     {
                         return (false, "Table name is required for TRUNCATE permission test");
                     }
+
                     // Check if can truncate (without actually doing it)
                     sql = $"DO $$ BEGIN EXECUTE 'EXPLAIN TRUNCATE TABLE {objectName}'; EXCEPTION WHEN insufficient_privilege THEN RAISE EXCEPTION ''no permission''; END $$;";
-                    break;
-
-                case DatabasePermission.ALL:
-                    // For ALL, we'll just test a basic permission
-                    sql = "SELECT 1 FROM information_schema.tables LIMIT 1;";
                     break;
 
                 default:

@@ -35,7 +35,6 @@ export const DatabasePermissions = {
   CONNECT: "CONNECT",
   TEMPORARY: "TEMPORARY",
   EXECUTE: "EXECUTE",
-  ALL: "ALL",
 } as const;
 
 export type DatabasePermission = keyof typeof DatabasePermissions;

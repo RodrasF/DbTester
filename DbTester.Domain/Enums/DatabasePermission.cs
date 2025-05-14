@@ -20,8 +20,5 @@ public enum DatabasePermission
     USAGE,
     CONNECT,
     TEMPORARY,
-    EXECUTE,
-
-    // Special
-    ALL
+    EXECUTE
 }
