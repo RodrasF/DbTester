@@ -45,7 +45,7 @@ public class ApplicationDbContext : DbContext
             .OwnsMany(r => r.OperationResults, builder =>
             {
                 builder.ToTable("OperationResults");
-                builder.WithOwner().HasForeignKey("TestRunId");
+                builder.WithOwner(o => o.TestRun).HasForeignKey(o => o.TestRunId);
                 builder.Property(o => o.Id);
                 builder.HasKey(o => o.Id);
 
@@ -85,9 +85,9 @@ public class ApplicationDbContext : DbContext
 
         // Configure TemplateParameter relationship
         modelBuilder.Entity<TemplateParameter>()
-            .HasOne<TestWorkflow>()
+            .HasOne(t => t.TestWorkflow)
             .WithMany(w => w.Parameters)
-            .HasForeignKey("TestWorkflowId")
+            .HasForeignKey(t => t.TestWorkflowId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 
