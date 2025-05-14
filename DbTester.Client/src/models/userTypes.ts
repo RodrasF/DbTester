@@ -2,7 +2,7 @@
 export interface TestUser {
   id?: string;
   username: string;
-  password?: string; // Optional as we don't return passwords from API
+  password?: string;
   connectionId: string;
   connectionName?: string; // For display purposes
   description?: string;
@@ -52,7 +52,7 @@ export interface UserResponse {
 }
 
 export interface ValidateUserRequest {
-  id: string;
+  userId: string;
 }
 
 export interface ValidateUserResponse {

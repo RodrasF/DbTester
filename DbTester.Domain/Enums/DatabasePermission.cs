@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace DbTester.Domain.Enums;
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum DatabasePermission
 {
     // Basic operations

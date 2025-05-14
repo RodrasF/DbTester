@@ -17,7 +17,7 @@ import { toast } from "sonner";
 export function UsersPage() {
   const [users, setUsers] = useState<TestUser[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<Partial<TestUser> | undefined>(
+  const [selectedUser, setSelectedUser] = useState<TestUser | undefined>(
     undefined
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,15 +48,12 @@ export function UsersPage() {
   };
 
   const handleAddUser = () => {
-    setCurrentUser(undefined);
+    setSelectedUser(undefined);
     setIsDialogOpen(true);
   };
 
   const handleEditUser = (user: TestUser) => {
-    setCurrentUser({
-      ...user,
-      password: "", // Don't pass password for editing
-    });
+    setSelectedUser(user);
     setIsDialogOpen(true);
   };
 
@@ -90,7 +87,7 @@ export function UsersPage() {
 
   const handleValidateUser = async (id: string) => {
     try {
-      const response = await userService.validateUser({ id });
+      const response = await userService.validateUser({ userId: id });
 
       setUsers((prev) =>
         prev.map((user) =>
@@ -109,13 +106,13 @@ export function UsersPage() {
           description: response.message || "User has all required permissions",
           duration: 3000,
         });
-      } else {
-        toast.error("Validation Failed", {
-          description:
-            response.message || "User is missing required permissions",
-          duration: 5000,
-        });
+        return;
       }
+
+      toast.error("Validation Failed", {
+        description: response.message || "User is missing required permissions",
+        duration: 5000,
+      });
     } catch (err) {
       toast.error("Error", {
         description: "Failed to validate user. Please try again later.",
@@ -130,7 +127,6 @@ export function UsersPage() {
 
     try {
       let response;
-
       if (userData.id) {
         // Update existing user
         response = await userService.updateUser(userData.id, userData);
@@ -139,36 +135,39 @@ export function UsersPage() {
         response = await userService.createUser(userData);
       }
 
-      if (response.success && response.user) {
-        if (userData.id) {
-          // Update local state
-          setUsers((prev) =>
-            prev.map((u) => (u.id === userData.id ? response.user! : u))
-          );
-          toast.success("User Updated", {
-            description:
-              response.message ||
-              `User "${userData.username}" was updated successfully`,
-            duration: 3000,
-          });
-        } else {
-          // Add to local state
-          setUsers((prev) => [...prev, response.user!]);
-          toast.success("User Added", {
-            description:
-              response.message ||
-              `User "${userData.username}" was added successfully`,
-            duration: 3000,
-          });
-        }
-
-        setIsDialogOpen(false);
-      } else {
+      if (!response.success || !response.user) {
         toast.error("Error", {
           description: response.message || "Failed to save user",
           duration: 5000,
         });
+        return;
       }
+
+      if (userData.id) {
+        // Update local state
+        setUsers((prev) =>
+          prev.map((u) => (u.id === userData.id ? response.user! : u))
+        );
+
+        toast.success("User Updated", {
+          description:
+            response.message ||
+            `User "${userData.username}" was updated successfully`,
+          duration: 3000,
+        });
+      } else {
+        // Add to local state
+        setUsers((prev) => [...prev, response.user!]);
+
+        toast.success("User Added", {
+          description:
+            response.message ||
+            `User "${userData.username}" was added successfully`,
+          duration: 3000,
+        });
+      }
+
+      setIsDialogOpen(false);
     } catch (err) {
       toast.error("Error", {
         description: "Failed to save user. Please try again later.",
@@ -179,6 +178,7 @@ export function UsersPage() {
       setIsSubmitting(false);
     }
   };
+
   // Helper for displaying permissions
   const getPermissionBadges = (permissions: UserPermission[]) => {
     // Group permissions by category
@@ -191,13 +191,20 @@ export function UsersPage() {
     const basicCount = grantedPermissions.filter((p) =>
       basicPermissions.includes(p.permission)
     ).length;
+
     const adminCount = grantedPermissions.filter((p) =>
       adminPermissions.includes(p.permission)
     ).length;
+
     const otherCount = grantedPermissions.length - basicCount - adminCount;
 
     return (
       <div className="flex flex-wrap gap-1">
+        {permissions.length == 0 && (
+          <Badge variant="outline" className="bg-gray-100">
+            No Permissions
+          </Badge>
+        )}
         {basicCount > 0 && (
           <Badge variant="outline" className="bg-blue-50">
             {basicCount} Basic
@@ -285,10 +292,7 @@ export function UsersPage() {
                       {user.description}
                     </p>
                   )}
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Permissions:</h4>
-                    {getPermissionBadges(user.expectedPermissions)}
-                  </div>
+                  <div>{getPermissionBadges(user.expectedPermissions)}</div>
 
                   <div className="text-xs text-muted-foreground">
                     Last validated:{" "}
@@ -299,12 +303,12 @@ export function UsersPage() {
 
                   <div className="flex gap-2 mt-4">
                     <Button
-                      variant="outline"
+                      variant="destructive"
                       size="sm"
                       className="flex-1"
-                      onClick={() => handleEditUser(user)}
+                      onClick={() => handleDeleteUser(user.id!)}
                     >
-                      Edit
+                      Delete
                     </Button>
                     <Button
                       variant="outline"
@@ -315,12 +319,12 @@ export function UsersPage() {
                       Validate
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => handleDeleteUser(user.id!)}
+                      onClick={() => handleEditUser(user)}
                     >
-                      Delete
+                      Edit
                     </Button>
                   </div>
                 </div>
@@ -334,7 +338,7 @@ export function UsersPage() {
         <UserDialog
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
-          user={currentUser}
+          user={selectedUser}
           onSubmit={handleFormSubmit}
           isSubmitting={isSubmitting}
         />

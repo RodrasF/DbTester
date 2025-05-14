@@ -5,7 +5,7 @@ namespace DbTester.Application.Interfaces;
 
 public interface IDatabaseService
 {
-    Task<bool> TestConnectionAsync(DatabaseConnection connection);
+    Task<bool> TestConnectionAsync(DatabaseConnection connection, string? username = null, string? password = null);
 
     // SQL execution
     Task<(bool Success, string? ErrorMessage, object? Results)> ExecuteSqlAsync(

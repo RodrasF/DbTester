@@ -33,11 +33,11 @@ public class PostgreSqlDatabaseService : IDatabaseService
         return builder.ToString();
     }
 
-    public async Task<bool> TestConnectionAsync(DatabaseConnection connection)
+    public async Task<bool> TestConnectionAsync(DatabaseConnection connection, string? username = null, string? password = null)
     {
         try
         {
-            await using var dbConnection = new NpgsqlConnection(GetConnectionString(connection));
+            await using var dbConnection = new NpgsqlConnection(GetConnectionString(connection, username, password));
             await dbConnection.OpenAsync();
             return true;
         }

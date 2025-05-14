@@ -19,23 +19,16 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   DatabasePermissions,
-  type DatabasePermission,
   type TestUser,
   type UserPermission,
 } from "@/models/userTypes";
-import { connectionService } from "@/services/connectionService";
+import {
+  connectionService,
+  type DatabaseConnection,
+} from "@/services/connectionService";
 import { Label } from "@/components/ui/label";
 import { PermissionItem } from "@/components/user/PermissionItem";
-
-// Define which permissions require object names
-const permissionsRequiringObjectNames: DatabasePermission[] = [
-  DatabasePermissions.SELECT,
-  DatabasePermissions.INSERT,
-  DatabasePermissions.UPDATE,
-  DatabasePermissions.DELETE,
-  DatabasePermissions.EXECUTE,
-  DatabasePermissions.TRUNCATE,
-];
+import { toast } from "sonner";
 
 interface UserDialogProps {
   open: boolean;
@@ -53,10 +46,9 @@ export function UserDialog({
   isSubmitting = false,
 }: UserDialogProps) {
   const [formData, setFormData] = useState<Partial<TestUser>>(user || {});
-  const [connections, setConnections] = useState<
-    Array<{ id: string; name: string }>
-  >([]);
+  const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [connectionsLoading, setConnectionsLoading] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const isEditing = Boolean(user?.id);
 
   // Load connections when dialog opens
@@ -65,13 +57,16 @@ export function UserDialog({
       loadConnections();
     }
   }, [open]);
+
   // Reset form when user changes or dialog opens/closes
   useEffect(() => {
     if (user) {
-      setFormData({ ...user, password: "" });
+      setFormData(user);
     } else {
-      setFormData({ expectedPermissions: [] });
+      setFormData({});
     }
+
+    setIsUpdatingPassword(false);
   }, [user, open]);
 
   const loadConnections = async () => {
@@ -79,12 +74,7 @@ export function UserDialog({
     try {
       const response = await connectionService.getAllConnections();
       if (response.success) {
-        setConnections(
-          response.connections.map((conn) => ({
-            id: conn.id!,
-            name: conn.name,
-          }))
-        );
+        setConnections(response.connections);
       }
     } catch (error) {
       console.error("Failed to load connections", error);
@@ -108,6 +98,7 @@ export function UserDialog({
       connectionName: connection?.name,
     });
   };
+
   const handlePermissionChange = (updatedPermission: UserPermission) => {
     const currentPermissions = formData.expectedPermissions || [];
 
@@ -131,55 +122,38 @@ export function UserDialog({
 
     setFormData({ ...formData, expectedPermissions: updatedPermissions });
   };
+
+  const openPasswordUpdate = () => {
+    setIsUpdatingPassword(true);
+    // Empty password is a valid value
+    setFormData({ ...formData, password: "" });
+  };
+
+  const cancelPasswordUpdate = () => {
+    setIsUpdatingPassword(false);
+    setFormData({ ...formData, password: undefined });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Validate form
-    const requiredFields = ["username", "connectionId", "permissions"];
+
+    const requiredFields = ["connectionId", "username"];
     const missingFields = requiredFields.filter(
       (field) => !formData[field as keyof TestUser]
     );
 
     if (missingFields.length > 0) {
-      alert(`Please fill in all required fields: ${missingFields.join(", ")}`);
+      toast.error("Oops!", {
+        description: `Please fill in all required fields: ${missingFields.join(
+          ", "
+        )}`,
+      });
       return;
     }
 
-    // Need to add password check for new users
-    if (!isEditing && !formData.password) {
-      alert("Password is required for new users");
-      return;
-    }
-
-    // If array is empty, don't submit
-    if (
-      !formData.expectedPermissions ||
-      formData.expectedPermissions.length === 0
-    ) {
-      alert("Please select at least one permission");
-      return;
-    }
-
-    // Check if object names are required for any selected permissions
-    const missingObjectNames = formData.expectedPermissions.filter(
-      (p) =>
-        permissionsRequiringObjectNames.includes(p.permission) &&
-        p.isGranted &&
-        (!p.objectName || p.objectName.trim() === "")
-    );
-
-    if (missingObjectNames.length > 0) {
-      const missingPermNames = missingObjectNames
-        .map((p) => p.permission)
-        .join(", ");
-      alert(
-        `Please provide object names for the following permissions: ${missingPermNames}`
-      );
-      return;
-    }
-
-    // Send user data directly without permissionDetails
     onSubmit(formData as TestUser);
   };
+
   // Group permissions for UI organization
   const permissionGroups = {
     basic: [
@@ -218,9 +192,32 @@ export function UserDialog({
                 : "Enter test user details below to add a new database user for testing."}
             </DialogDescription>
           </DialogHeader>
+
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="username" className="text-right">
+              <Label htmlFor="connectionId" className="text-left">
+                Database Connection*
+              </Label>
+              <Select
+                value={formData.connectionId}
+                onValueChange={handleConnectionChange}
+                disabled={connectionsLoading}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a connection" />
+                </SelectTrigger>
+                <SelectContent>
+                  {connections.map((connection) => (
+                    <SelectItem key={connection.id} value={connection.id ?? ""}>
+                      {connection.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="username" className="text-left">
                 Username*
               </Label>
               <Input
@@ -235,47 +232,53 @@ export function UserDialog({
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="password" className="text-right">
-                Password{!isEditing ? "*" : ""}
+              <Label htmlFor="password" className="text-left">
+                Password
               </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password || ""}
-                onChange={handleInputChange}
-                className="col-span-3"
-                placeholder={
-                  isEditing ? "Leave blank to keep unchanged" : "Enter password"
-                }
-                required={!isEditing}
-              />
-            </div>
-
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="connectionId" className="text-right">
-                Database Connection*
-              </Label>
-              <Select
-                value={formData.connectionId}
-                onValueChange={handleConnectionChange}
-                disabled={connectionsLoading}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select a connection" />
-                </SelectTrigger>
-                <SelectContent>
-                  {connections.map((connection) => (
-                    <SelectItem key={connection.id} value={connection.id}>
-                      {connection.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!isEditing ? (
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={formData.password || ""}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  placeholder={"Enter password"}
+                />
+              ) : isUpdatingPassword ? (
+                <div className="col-span-3 grid grid-cols-4 items-center gap-2">
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={formData.password || ""}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    placeholder={"Enter new password"}
+                  />
+                  <Button
+                    type="button"
+                    variant="default"
+                    className="h-8 w-8"
+                    onClick={cancelPasswordUpdate}
+                  >
+                    X
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={openPasswordUpdate}
+                >
+                  Edit Password
+                </Button>
+              )}
             </div>
 
             <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="description" className="text-right pt-2">
+              <Label htmlFor="description" className="text-left">
                 Description
               </Label>
               <Textarea
@@ -290,7 +293,7 @@ export function UserDialog({
             </div>
 
             <div className="grid grid-cols-4 items-start gap-4">
-              <Label className="text-right pt-2">Permissions*</Label>
+              <Label className="text-left">Permissions</Label>
               <div className="col-span-3 space-y-4">
                 {" "}
                 <div className="space-y-2">
@@ -312,9 +315,7 @@ export function UserDialog({
                           objectName={existingPermission?.objectName}
                           onChange={handlePermissionChange}
                           disabled={false}
-                          requiresObjectName={permissionsRequiringObjectNames.includes(
-                            permissionType
-                          )}
+                          requiresObjectName={false}
                         />
                       );
                     })}
@@ -339,9 +340,7 @@ export function UserDialog({
                           objectName={existingPermission?.objectName}
                           onChange={handlePermissionChange}
                           disabled={false}
-                          requiresObjectName={permissionsRequiringObjectNames.includes(
-                            permissionType
-                          )}
+                          requiresObjectName={false}
                         />
                       );
                     })}
@@ -366,9 +365,7 @@ export function UserDialog({
                           objectName={existingPermission?.objectName}
                           onChange={handlePermissionChange}
                           disabled={false}
-                          requiresObjectName={permissionsRequiringObjectNames.includes(
-                            permissionType
-                          )}
+                          requiresObjectName={false}
                         />
                       );
                     })}

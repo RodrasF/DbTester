@@ -35,7 +35,7 @@ public class CreateTestUserRequest
 
 public class UpdateTestUserRequest
 {
-    public Guid Id { get; set; }
+    public required Guid Id { get; set; }
     public string? Username { get; set; }
     public string? Password { get; set; }
     public Guid? ConnectionId { get; set; }
@@ -53,13 +53,12 @@ public class TestUserListResponse : BaseResponse
     public List<TestUserDto> Users { get; set; } = new List<TestUserDto>();
 }
 
-public class VerifyUserExistsRequest
+public class ValidateUserRequest
 {
     public Guid UserId { get; set; }
-    public Guid ConnectionId { get; set; }
 }
 
-public class VerifyUserExistsResponse : BaseResponse
+public class ValidateUserResponse : BaseResponse
 {
-    public bool Exists { get; set; }
+    public bool IsValid { get; set; }
 }

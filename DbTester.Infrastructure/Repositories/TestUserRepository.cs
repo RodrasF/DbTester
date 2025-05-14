@@ -37,15 +37,13 @@ public class TestUserRepository : EfGenericRepository<TestUser>, ITestUserReposi
             .FirstOrDefaultAsync(u => u.Username == username);
     }
 
-    public async Task<bool> VerifyUserExistsInDatabaseAsync(TestUser user, DatabaseConnection connection)
+    public async Task<bool> ValidateUserAsync(TestUser user, string decryptedPassword)
     {
-        // Use the database service to verify if the user exists in the actual database
-        // This will depend on the implementation of your database service
-        var (success, _, _) = await _databaseService.ExecuteSqlAsync(
-            connection,
-            "SELECT 1 FROM pg_roles WHERE rolname = @username",
-            new { username = user.Username });
+        var isValid = await _databaseService.TestConnectionAsync(user.Connection!, user.Username, decryptedPassword);
 
-        return success;
+        user.IsValid = isValid;
+        await UpdateAsync(user);
+
+        return isValid;
     }
 }

@@ -6,7 +6,6 @@ import {
   type UserResponse,
   type ValidateUserRequest,
   type ValidateUserResponse,
-  type UserPermission,
 } from "../models/userTypes";
 
 export const userService = {
@@ -57,7 +56,7 @@ export const userService = {
   // Update an existing user
   async updateUser(id: string, user: TestUser): Promise<UserResponse> {
     try {
-      const response = await api.put<UserResponse>(`/users/${id}`, user);
+      const response = await api.patch<UserResponse>(`/users/${id}`, user);
       return response.data;
     } catch (error) {
       console.error(`Error updating test user ${id}:`, error);

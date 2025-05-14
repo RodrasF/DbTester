@@ -39,7 +39,7 @@ public class UsersController : ControllerBase
         {
             Success = true,
             Message = "Users retrieved successfully",
-            Users = users.Select(MapToDto).ToList()
+            Users = [.. users.Select(MapToDto)]
         };
 
         return Ok(response);
@@ -110,6 +110,8 @@ public class UsersController : ControllerBase
 
         var createdUser = await _userRepository.AddAsync(user);
 
+        var isValid = await _userRepository.ValidateUserAsync(createdUser, request.Password);
+
         var response = new TestUserResponse
         {
             Success = true,
@@ -120,7 +122,7 @@ public class UsersController : ControllerBase
         return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, response);
     }
 
-    [HttpPut("{id:guid}")]
+    [HttpPatch("{id:guid}")]
     public async Task<ActionResult<TestUserResponse>> UpdateUser(Guid id, UpdateTestUserRequest request)
     {
         if (id != request.Id)
@@ -152,8 +154,7 @@ public class UsersController : ControllerBase
             });
         }
 
-        // Only update username if a new one was provided
-        if (request.Username != null)
+        if (request.Username != null && request.Username != existingUser.Username)
         {
             var existingUserWithSameUsername = await _userRepository.GetByUsernameAsync(request.Username);
             if (existingUserWithSameUsername != null && existingUserWithSameUsername.Id != id)
@@ -167,14 +168,13 @@ public class UsersController : ControllerBase
             existingUser.Username = request.Username;
         }
 
-        // Only update password if a new one was provided
-        if (request.Password != null)
+        var encryptedPassword = _encryptionService.Encrypt(request.Password ?? string.Empty);
+        if (request.Password != null && encryptedPassword != existingUser.EncryptedPassword)
         {
-            existingUser.EncryptedPassword = _encryptionService.Encrypt(request.Password);
+            existingUser.EncryptedPassword = encryptedPassword;
         }
 
-        // Only update connection if a new one was provided
-        if (request.ConnectionId.HasValue)
+        if (request.ConnectionId.HasValue && request.ConnectionId.Value != existingUser.ConnectionId)
         {
             var connection = await _connectionRepository.GetByIdAsync(request.ConnectionId.Value);
             if (connection == null)
@@ -190,13 +190,11 @@ public class UsersController : ControllerBase
             existingUser.Connection = connection;
         }
 
-        // Only update description if a new one was provided
-        if (request.Description != null)
+        if (request.Description != null && request.Description != existingUser.Description)
         {
             existingUser.Description = request.Description;
         }
 
-        // Only update permissions if new ones were provided
         if (request.ExpectedPermissions != null)
         {
             existingUser.ExpectedPermissions.Clear();
@@ -209,6 +207,8 @@ public class UsersController : ControllerBase
         }
 
         await _userRepository.UpdateAsync(existingUser);
+
+        var isValid = await _userRepository.ValidateUserAsync(existingUser, _encryptionService.Decrypt(existingUser.EncryptedPassword));
 
         var response = new TestUserResponse
         {
@@ -243,42 +243,30 @@ public class UsersController : ControllerBase
         });
     }
 
-    [HttpPost("verify")]
-    public async Task<ActionResult<VerifyUserExistsResponse>> VerifyUserExists(VerifyUserExistsRequest request)
+    [HttpPost("validate")]
+    public async Task<ActionResult<ValidateUserResponse>> ValidateUser(ValidateUserRequest request)
     {
         var user = await _userRepository.GetByIdAsync(request.UserId);
-
         if (user == null)
         {
-            return NotFound(new VerifyUserExistsResponse
+            return NotFound(new ValidateUserResponse
             {
                 Success = false,
                 Message = "User not found"
             });
         }
 
-        var connection = await _connectionRepository.GetByIdAsync(request.ConnectionId);
+        var isValid = await _userRepository.ValidateUserAsync(user, _encryptionService.Decrypt(user.EncryptedPassword));
 
-        if (connection == null)
-        {
-            return NotFound(new VerifyUserExistsResponse
-            {
-                Success = false,
-                Message = "Connection not found"
-            });
-        }
-
-        var exists = await _userRepository.VerifyUserExistsInDatabaseAsync(user, connection);
-
-        return Ok(new VerifyUserExistsResponse
+        return Ok(new ValidateUserResponse
         {
             Success = true,
-            Message = exists ? "User exists in database" : "User does not exist in database",
-            Exists = exists
+            Message = isValid ? "User is valid" : "User is not valid",
+            IsValid = isValid
         });
     }
 
-    private static TestUserDto MapToDto(TestUser user)
+    private TestUserDto MapToDto(TestUser user)
     {
         return new TestUserDto
         {
